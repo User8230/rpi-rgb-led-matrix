@@ -43,6 +43,7 @@ static int usage(const char *progname) {
           "\t-C <r,g,b>        : Color. Default 255,255,0\n"
           "\t-B <r,g,b>        : Background-Color. Default 0,0,0\n"
           "\t-O <r,g,b>        : Outline-Color, e.g. to increase contrast.\n"
+          "\t-u                : Show UTC time\n"
           "\n"
           );
   rgb_matrix::PrintMatrixFlags(stderr);
@@ -80,9 +81,10 @@ int main(int argc, char *argv[]) {
   int y_orig = 0;
   int letter_spacing = 0;
   int line_spacing = 0;
+  bool utc = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "x:y:f:C:B:O:s:S:d:")) != -1) {
+  while ((opt = getopt(argc, argv, "ux:y:f:C:B:O:s:S:d:")) != -1) {
     switch (opt) {
     case 'd': format_lines.push_back(optarg); break;
     case 'x': x_orig = atoi(optarg); break;
@@ -108,6 +110,9 @@ int main(int argc, char *argv[]) {
         return usage(argv[0]);
       }
       with_outline = true;
+      break;
+    case 'u':
+      utc = true;
       break;
     default:
       return usage(argv[0]);
@@ -163,7 +168,10 @@ int main(int argc, char *argv[]) {
 
   while (!interrupt_received) {
     offscreen->Fill(bg_color.r, bg_color.g, bg_color.b);
-    localtime_r(&next_time.tv_sec, &tm);
+    if (utc)
+      gmtime_r(&next_time.tv_sec, &tm);
+    else
+      localtime_r(&next_time.tv_sec, &tm);
 
     int line_offset = 0;
     for (const std::string &line : format_lines) {
